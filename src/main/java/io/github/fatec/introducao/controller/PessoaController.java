@@ -3,8 +3,6 @@ package io.github.fatec.introducao.controller;
 import io.github.fatec.introducao.dto.PessoaRequest;
 import io.github.fatec.introducao.dto.PessoaResponse;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.http.ResponseEntity;
-import org.springframework.http.HttpStatus;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -14,56 +12,43 @@ import java.util.Collection;
 @RequestMapping("/pessoas")
 public class PessoaController {
 
-    // Para simular banco de dados
     private final Map<Long, PessoaResponse> banco = new HashMap<>();
-
-    // gerar ID simples
     private Long contador = 1L;
 
-    @GetMapping("aluno")
-    public PessoaResponse aluno() {
-        return new PessoaResponse(1L, "Gabriel");
-    }
-
+    // GET - listar todos
     @GetMapping
     public Collection<PessoaResponse> listar() {
         return banco.values();
     }
 
     @PostMapping
-    public ResponseEntity<PessoaResponse> criar(@RequestBody PessoaRequest request) {
+    public PessoaResponse criar(@RequestBody PessoaRequest request) {
 
-        PessoaResponse nova = new PessoaResponse(contador++, request.nome());
+        Long idGerado = contador++;
 
-        banco.put(nova.id(), nova);
+        PessoaResponse nova = new PessoaResponse(idGerado, request.nome());
 
-        return ResponseEntity.status(HttpStatus.CREATED).body(nova);
+        banco.put(idGerado, nova);
+
+        return nova;
     }
 
-    @PutMapping("/{id}")
-    public ResponseEntity<PessoaResponse> atualizar(@PathVariable Long id,
-                                                    @RequestBody PessoaRequest request) {
+    @PutMapping
+    public PessoaResponse atualizar(@RequestBody PessoaRequest request) {
 
-        if (!banco.containsKey(id)) {
-            return ResponseEntity.notFound().build();
-        }
+        PessoaResponse atualizada =
+                new PessoaResponse(request.id(), request.nome());
 
-        PessoaResponse atualizada = new PessoaResponse(id, request.nome());
+        banco.put(request.id(), atualizada);
 
-        banco.put(id, atualizada);
-
-        return ResponseEntity.ok(atualizada);
+        return atualizada;
     }
 
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deletar(@PathVariable Long id) {
+    @DeleteMapping
+    public String deletar(@RequestBody PessoaRequest request) {
 
-        if (!banco.containsKey(id)) {
-            return ResponseEntity.notFound().build();
-        }
+        banco.remove(request.id());
 
-        banco.remove(id);
-
-        return ResponseEntity.noContent().build();
+        return "Usuário " + request.id() + " deletado";
     }
 }
